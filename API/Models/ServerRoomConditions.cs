@@ -16,6 +16,6 @@ namespace H5_CASE_2023_API.Models
         public DateTime DateTime { get; set; }
 
         public double Temperture { get; set; }
-        public double Humitity { get; set; }
+        public double Humidtity { get; set; }
     }
 }

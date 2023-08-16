@@ -7,7 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<IKeycardRepository, KeycardRepository>();
+builder.Services.AddScoped<IV1, V1>();
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
 {

@@ -20,7 +20,6 @@ namespace H5_CASE_2023_API.Models
 
         public DateTime DateTime { get; set; }
 
-        [NotMapped]
-        public Blob Image { get; set; }
+        public Byte[] Image { get; set; }
     }
 }

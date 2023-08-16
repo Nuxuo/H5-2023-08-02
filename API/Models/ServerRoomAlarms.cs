@@ -4,7 +4,7 @@ using System.Reflection.Metadata;
 
 namespace H5_CASE_2023_API.Models
 {
-    public class ServerRoomEntryAlarms
+    public class ServerRoomAlarms
     {
         [Key]
         [Required]
@@ -17,10 +17,9 @@ namespace H5_CASE_2023_API.Models
         public DateTime DateTime { get; set; }
 
         public double Temperture { get; set; }
-        public double Humitity { get; set; }
+        public double Humidtity { get; set; }
 
-        [NotMapped]
-        public Blob Image { get; set; }
+        public string Reason {get; set;}
 
     }
 }

@@ -46,7 +46,7 @@ CREATE TABLE `ServerRoomEntryActivity` (
   `image` blob
 );
 
-CREATE TABLE `ServerRoomEntryAlarms` (
+CREATE TABLE `ServerRoomAlarms` (
   `Id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `ServerRoomId` int NOT NULL,
   `Temperture` double NOT NULL,
@@ -69,4 +69,4 @@ ALTER TABLE `ServerRoomEntryActivity` ADD FOREIGN KEY (`EmployeeId`) REFERENCES 
 
 ALTER TABLE `ServerRoomEntryActivity` ADD FOREIGN KEY (`ServerRoomId`) REFERENCES `ServerRoom` (`Id`);
 
-ALTER TABLE `ServerRoomEntryAlarms` ADD FOREIGN KEY (`ServerRoomId`) REFERENCES `ServerRoom` (`Id`);
+ALTER TABLE `ServerRoomAlarms` ADD FOREIGN KEY (`ServerRoomId`) REFERENCES `ServerRoom` (`Id`);
