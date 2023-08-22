@@ -19,7 +19,9 @@ namespace H5_CASE_2023_API.Models
         public double Temperture { get; set; }
         public double Humidtity { get; set; }
 
-        public string Reason {get; set;}
+        public int AlarmTypeId {get; set;}
+        [ForeignKey("AlarmTypeId")]
+        public AlarmTypes AlarmTypes { get; set; }
 
     }
 }

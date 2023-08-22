@@ -38,13 +38,13 @@ namespace H5_CASE_2023_API.Controllers
             return _temp == null ? NotFound() : Ok(_temp);
         }
 
-        [HttpPost("Data/Conditions")]
+        [HttpGet("Data/Conditions")]
         public IActionResult DataConditionsPost([FromBody] ConditionsPost conditionsPost)
         {
             return _repos.Conditions_Post(conditionsPost) == false ? NotFound() : Ok();
         }
 
-        [HttpPost("Data/Alarm")]
+        [HttpGet("Data/Alarm")]
         public IActionResult DataAlarmPost([FromBody] AlarmPost alarmPost)
         {
             return _repos.Alarm_Post(alarmPost) == false ? NotFound() : Ok();

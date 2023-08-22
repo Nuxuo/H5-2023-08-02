@@ -6,6 +6,6 @@ namespace H5_CASE_2023_API.Models.Packages
         public double Temperture {get; set;}
         public double Humidtity {get; set;}
         public DateTime DateTime {get; set;}
-        public string Reason {get; set;}
+        public int[] AlarmTypes {get; set;}
     }
 }

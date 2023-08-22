@@ -81,7 +81,10 @@ namespace H5_CASE_2023_API.Repositories
                 HighTemperture = _serverRoom.HighTemperture,
                 LowTemperture = _serverRoom.LowTemperture,
 
-                HourlyTempertureMaxChange = _serverRoom.HourlyTempertureMaxChange
+                HourlyTempertureMaxChange = _serverRoom.HourlyTempertureMaxChange,
+
+                OperatingAllowedTimeStampStart = _serverRoom.OperatingAllowedTimeStampStart,
+                OperatingAllowedTimeStampEnd = _serverRoom.OperatingAllowedTimeStampEnd
             };
         }
 
@@ -108,13 +111,16 @@ namespace H5_CASE_2023_API.Repositories
             if (alarmPost == null)
                 return false;
 
-            _context.ServerRoomAlarms.Add(new ServerRoomAlarms{
-                ServerRoomId = alarmPost.ServerRoomId,
-                DateTime = alarmPost.DateTime,
-                Temperture = alarmPost.Temperture,
-                Humidtity = alarmPost.Humidtity,
-                Reason = alarmPost.Reason
-            });
+            foreach (int AlarmTypeId in alarmPost.AlarmTypes){
+                _context.ServerRoomAlarms.Add(new ServerRoomAlarms{
+                    ServerRoomId = alarmPost.ServerRoomId,
+                    DateTime = alarmPost.DateTime,
+                    Temperture = alarmPost.Temperture,
+                    Humidtity = alarmPost.Humidtity,
+                    AlarmTypeId = AlarmTypeId
+                });
+            }
+
 
             _context.SaveChanges();
 

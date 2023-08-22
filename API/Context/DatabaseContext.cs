@@ -16,5 +16,6 @@ namespace H5_CASE_2023_API.Context
         public DbSet<ServerRoomConditions> ServerRoomConditions { get; set; }
         public DbSet<ServerRoomEntryActivity> ServerRoomEntryActivity { get; set; }
         public DbSet<ServerRoomAlarms> ServerRoomAlarms { get; set; }
+        public DbSet<AlarmTypes> AlarmTypes { get; set; }
     }
 }
