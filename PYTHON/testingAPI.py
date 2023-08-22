@@ -19,16 +19,18 @@ from pygame.locals import *
 import pygame.camera
 import pylcdlib
 
+# STATIC SETTINGS
 Api_Address = "http://192.168.1.135:44344"
 ServerRoomId = "1"
-CardUid = ""
 
+# SERVER SETTINGS FROM API
 setup_starting = True
 while(setup_starting):
     payload = {'ServerRoomId':ServerRoomId}
     setup_response = requests.get(Api_Address + '/V1/SetupRequest', json = payload)
     if(setup_response.status_code == 200):
         setup_starting = False
+        
 setup_response_json = setup_response.json()
 high_temp = setup_response_json["highTemperture"]
 low_temp = setup_response_json["lowTemperture"]
@@ -38,16 +40,23 @@ low_humid = setup_response_json["lowHumidity"]
 operating_time_start = datetime.strptime(setup_response_json["operatingAllowedTimeStampStart"], "%H:%M:%S").time()
 operating_time_end = datetime.strptime(setup_response_json["operatingAllowedTimeStampEnd"], "%H:%M:%S").time()
 
+
+# RFID READER SETTINGS
 i2cBus = 1
 i2cAddress = 0x28
 MFRC522Reader = MFRC522(i2cBus, i2cAddress)
 continue_reading = True
+CardUid = ""
 
+
+# KEYPAD SETTINGS
 cols = [DigitalInOut(x) for x in (board.D26, board.D5, board.D20)]
 rows = [DigitalInOut(x) for x in (board.D13, board.D6, board.D21, board.D19)]
 keys = ((1, 2, 3),(4, 5, 6),(7, 8, 9),('*', 0, '#'))
 keypad = adafruit_matrixkeypad.Matrix_Keypad(rows, cols, keys)
 
+
+# SOUND, AND FAIL SAFE SETTINGS
 lcd = pylcdlib.lcd(0x27,1)
 buzzer_pin = 2
 led_pin = 4
@@ -56,9 +65,10 @@ pinMode(buzzer_pin,"OUTPUT")
 pinMode(led_pin,"OUTPUT")
 pinMode(button,"INPUT")
 
+
+# SENSOR SETTINGS
 dht_sensor_port = 7
 dht_sensor_type = 1
-
 conditions_last_check = datetime.now()
 conditions_last_send = datetime.now()
 conditions_mins_check = 1
@@ -71,10 +81,14 @@ alarms_checked =  {
     4:datetime.now()
 }
 
+# LCD SETTINGS
 width = 920
 height = 480
 
+
 # FUNCTIONS
+
+# CHECKS IF ALARM AND CODITIONS HAS TIMEOUT
 def has_time_elasped(ts1, ts2, t):
     td_in_secs = (ts2 -ts1).total_seconds()
     td_in_mins = divmod(td_in_secs, 60)[0]
@@ -83,15 +97,25 @@ def has_time_elasped(ts1, ts2, t):
     else:
         return False
 
+# CLEARS RASPBERRY DISPLAY
 def clear_display():
     setRGB(0,0,255)
     setText("")
-    
+
+# CLEAR AUDRINO LCD
+def clear_LCD():
+    lcd.lcd_puts("",1)
+    lcd.lcd_puts("",2)
+    lcd.lcd_puts("",3)
+    lcd.lcd_puts("",4)
+
+# SERIALIZES JSON
 def json_serial(obj):
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError ("Type %s not serializable" % type(obj))
 
+# RETURNS IMAGE IN BASE64
 def camera_image():      
     pygame.init()
     pygame.camera.init()
@@ -103,13 +127,8 @@ def camera_image():
     with open('temp-image.jpg', "rb") as f:
         ba = bytearray(f.read())
         return base64.b64encode(ba).decode('utf-8')
-    
-def clear_LCD():
-    lcd.lcd_puts("",1)
-    lcd.lcd_puts("",2)
-    lcd.lcd_puts("",3)
-    lcd.lcd_puts("",4)
-    
+
+# SOUND EFFECTS FOR DOOR OPEN AND LED    
 def granted_access_effects():
     digitalWrite(buzzer_pin,1)
     time.sleep(0.01)
@@ -118,21 +137,18 @@ def granted_access_effects():
     time.sleep(2)
     digitalWrite(led_pin,0)
 
+# CHECKS IF DOOR ACCESS IS OUTSIDE NORMAL HOURS.
 def check_access_timestamp():
     global operating_time_start
     global operating_time_end
     current_datetime = datetime.now()
     current_time = current_datetime.time()
-    
-    print("checking open hours time")
-    
     if (operating_time_start > current_time or current_time > operating_time_end):
         [ temp,hum ] = dht(dht_sensor_port,dht_sensor_type)
         formatted_timestamp = current_datetime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         time = dumps(formatted_timestamp, default=json_serial)
         payload = {'ServerRoomId':ServerRoomId,'Temperture':temp,'Humidtity':hum,'DateTime':formatted_timestamp,'Reason':'Unauthorized Access.. (outside open hours)',}
         response = requests.get(Api_Address + '/V1/Data/Alarm', json = payload)
-    
 
 def access_granted():
     clear_display()
@@ -148,14 +164,18 @@ def access_denied():
     setText("Access denied!")
     time.sleep(1)
     clear_display()
-    
+
+
+# ADDS ALARM TO TIMEOUT, BASED ON STATIC SERVER SETTINGS.
 def add_alarm_checked(_id):
     global conditions_mins_alarm  
     if has_time_elasped(alarms_checked.get(_id) , datetime.now(), conditions_mins_alarm):
         alarms_checked[_id] = datetime.now()
         return True
     return False
-    
+
+# CHECKS CONDITIONS, AND CHECKS FOR ALARM
+# SENDS IF NO TIMEOUT.
 def check_conditions(ts):
     print('Checking Conditions..')
     clear_LCD()
@@ -166,6 +186,8 @@ def check_conditions(ts):
     global conditions_last_send
     conditions_last_check = timestamp
     reason = ""
+
+    
     [ temp,hum ] = dht(dht_sensor_port,dht_sensor_type)
     if (temp > high_temp):
         if add_alarm_checked(1):
@@ -183,7 +205,8 @@ def check_conditions(ts):
     clear_display()
     lcd.lcd_puts("Temperature = "+ str(temp)+"c",1)
     lcd.lcd_puts("Humidity = " + str(hum) +"%",2)
-    
+
+    # CONDITIONS CHECK
     if ( has_time_elasped( conditions_last_send , timestamp, conditions_mins_conditions )):
         conditions_last_send = timestamp
         print("Sending Conditions..")
@@ -191,10 +214,9 @@ def check_conditions(ts):
         payload = {'ServerRoomId':ServerRoomId,'Temperture':temp,'Humidtity':hum,'Datetime':formatted_timestamp}
         response = requests.get(Api_Address + '/V1/Data/Conditions', json = payload)
         conditions_last_send = timestamp
-        
+
+    # ALARM CHECK.
     if (reason != ""):
-        print("Sending Alarm..")
-        lcd.lcd_puts(reason,4)
         time = dumps(timestamp, default=json_serial)
         payload = {'ServerRoomId':ServerRoomId,'Temperture':temp,'Humidtity':hum,'DateTime':formatted_timestamp,'Reason':reason,}
         response = requests.get(Api_Address + '/V1/Data/Alarm', json = payload)
@@ -202,14 +224,17 @@ def check_conditions(ts):
 # MAIN LOOP
 while continue_reading:
     button_status= digitalRead(button)
-    
+
+    # FAIL SAFE BUTTON
     if button_status:
         access_granted()
-    
+
+    # CONDITIONS CHECK, BASED ON TIMEOUT FROM SERVER SETTINGS.
     timestamp = datetime.now()
     if ( has_time_elasped( conditions_last_check , timestamp, conditions_mins_check )):
         check_conditions(timestamp)
-        
+
+    # CHECKS RFID READER
     (status, backData, tagType) = MFRC522Reader.scan()
     if status == MFRC522Reader.MIFARE_OK:
         
@@ -230,7 +255,8 @@ while continue_reading:
                 key_reading = True
                 security_code = ""
                 setText(" Enter PIN code")
-                
+
+                # PAUSES RFID READER, AND READS KEYPAD
                 while(keypad_reading):
                     keys = keypad.pressed_keys
                     
@@ -252,8 +278,6 @@ while continue_reading:
                 payload = {'ImageByteArray':image,'Code':security_code,'KeycardId':CardUid, 'ServerRoomId':ServerRoomId}
                 response = requests.get(Api_Address + '/V1/AccessRequest/code', json = payload)
 
-                print(response)
-                
                 if(response.status_code == 200):
                     access_granted()
                     
